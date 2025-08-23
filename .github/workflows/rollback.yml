@@ -38,7 +38,7 @@ jobs:
           LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
           LIQUIBASE_COMMAND_URL: jdbc:snowflake://${{ secrets.SNOWFLAKE_ACCOUNT }}.snowflakecomputing.com/?db=${{ inputs.environment == 'dev' && 'ONLINE_STORE_DEV' || 'ONLINE_STORE_DB' }}&schema=PUBLIC&warehouse=COMPUTE_WH
           LIQUIBASE_COMMAND_USERNAME: LIQUIBASE_USER
-          LIQUIBASE_PASSWORD: ${{ secrets[format('LIQUIBASE_{0}_PASSWORD', upper(inputs.environment))] }}
+          LIQUIBASE_COMMAND_PASSWORD: ${{ secrets[format('LIQUIBASE_{0}_PASSWORD', upper(inputs.environment))] }}
       
       - name: Revert dbt Models
         run: |

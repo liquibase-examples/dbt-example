@@ -1,0 +1,41 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Liquibase
+        uses: liquibase-github-actions/setup-liquibase@v7.0.0
+        with:
+          liquibase-version: '4.29.0'
+      
+      - name: Validate Liquibase Changelog
+        run: |
+          liquibase validate \
+            --defaults-file=liquibase/properties/liquibase.dev.properties
+        env:
+          LIQUIBASE_PASSWORD: ${{ secrets.LIQUIBASE_DEV_PASSWORD }}
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install dbt
+        run: |
+          pip install dbt-snowflake
+      
+      - name: Test dbt Compilation
+        run: |
+          cd dbt
+          dbt deps
+          dbt compile --target dev
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          DBT_PASSWORD: ${{ secrets.DBT_DEV_PASSWORD }}

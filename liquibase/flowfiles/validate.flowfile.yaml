@@ -1,0 +1,22 @@
+globalVariables:
+  ENVIRONMENT: "${ENVIRONMENT:-dev}"
+
+stages:
+  validate:
+    actions:
+      - type: liquibase
+        command: validate
+
+  status:
+    actions:
+      - type: liquibase
+        command: status
+        cmdArgs: {verbose: true}
+
+  compile-check:
+    actions:
+      - type: shell
+        command: |
+          cd dbt
+          dbt deps
+          dbt compile --target ${ENVIRONMENT}

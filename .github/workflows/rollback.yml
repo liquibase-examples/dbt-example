@@ -1,0 +1,42 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_tag:
+        description: 'Tag to rollback to'
+        required: true
+        type: string
+      environment:
+        description: 'Environment to rollback'
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Liquibase
+        uses: liquibase-github-actions/setup-liquibase@v7.0.0
+        with:
+          liquibase-version: '4.29.0'
+      
+      - name: Rollback Database
+        run: |
+          liquibase rollback \
+            --tag=${{ inputs.target_tag }} \
+            --defaults-file=liquibase/properties/liquibase.${{ inputs.environment }}.properties
+        env:
+          LIQUIBASE_PASSWORD: ${{ secrets[format('LIQUIBASE_{0}_PASSWORD', upper(inputs.environment))] }}
+      
+      - name: Revert dbt Models
+        run: |
+          echo "dbt model rollback would be handled by reverting to previous code version"
+          echo "This is typically done through git revert or checking out previous tag"

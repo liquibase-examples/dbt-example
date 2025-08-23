@@ -1,0 +1,23 @@
+snowflake:
+  outputs:
+    dev:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: DBT_USER
+      password: "{{ env_var('DBT_PASSWORD') }}"
+      role: DBT_ROLE
+      warehouse: COMPUTE_WH
+      database: "{{ env_var('SNOWFLAKE_DATABASE', 'ONLINE_STORE_DB') }}"
+      schema: DBT
+      threads: 4
+    prod:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: DBT_USER
+      password: "{{ env_var('DBT_PASSWORD') }}"
+      role: DBT_ROLE
+      warehouse: COMPUTE_WH
+      database: "{{ env_var('SNOWFLAKE_DATABASE', 'ONLINE_STORE_DB') }}"
+      schema: DBT
+      threads: 4
+  target: dev

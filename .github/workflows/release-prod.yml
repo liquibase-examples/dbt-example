@@ -1,0 +1,47 @@
+name: Release to Production
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: prod
+    
+    steps:
+      - name: Download Release Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: changelog-${{ github.event.release.target_commitish }}
+          path: release-artifact
+      
+      - name: Unzip Artifact
+        run: |
+          unzip release-artifact/changelog-*.zip -d deployment
+      
+      - name: Setup Liquibase
+        uses: liquibase-github-actions/setup-liquibase@v7.0.0
+        with:
+          liquibase-version: '4.29.0'
+      
+      - name: Deploy to Production
+        run: |
+          cd deployment
+          liquibase flow \
+            --flow-file=liquibase/flowfiles/deploy.flowfile.yaml \
+            --defaults-file=liquibase/properties/liquibase.prod.properties
+        env:
+          LIQUIBASE_PASSWORD: ${{ secrets.LIQUIBASE_PROD_PASSWORD }}
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          DBT_PASSWORD: ${{ secrets.DBT_PROD_PASSWORD }}
+          ENVIRONMENT: prod
+      
+      - name: Tag Database State
+        run: |
+          cd deployment
+          liquibase tag \
+            --tag=${{ github.event.release.tag_name }} \
+            --defaults-file=liquibase/properties/liquibase.prod.properties
+        env:
+          LIQUIBASE_PASSWORD: ${{ secrets.LIQUIBASE_PROD_PASSWORD }}

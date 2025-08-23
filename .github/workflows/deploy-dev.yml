@@ -1,0 +1,45 @@
+name: Deploy to Dev
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: dev
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Liquibase
+        uses: liquibase-github-actions/setup-liquibase@v7.0.0
+        with:
+          liquibase-version: '4.29.0'
+      
+      - name: Deploy Database Changes
+        run: |
+          liquibase flow \
+            --flow-file=liquibase/flowfiles/deploy.flowfile.yaml \
+            --defaults-file=liquibase/properties/liquibase.dev.properties
+        env:
+          LIQUIBASE_PASSWORD: ${{ secrets.LIQUIBASE_DEV_PASSWORD }}
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          DBT_PASSWORD: ${{ secrets.DBT_DEV_PASSWORD }}
+          ENVIRONMENT: dev
+      
+      - name: Create Changelog Artifact
+        run: |
+          mkdir -p artifacts
+          zip -r artifacts/changelog-${{ github.sha }}.zip \
+            liquibase/changelogs \
+            liquibase/properties \
+            liquibase/flowfiles \
+            dbt/
+      
+      - name: Upload Changelog Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: changelog-${{ github.sha }}
+          path: artifacts/changelog-${{ github.sha }}.zip
+          retention-days: 90

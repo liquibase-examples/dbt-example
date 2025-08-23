@@ -1,0 +1,34 @@
+globalVariables:
+  ENVIRONMENT: "${ENVIRONMENT:-dev}"
+
+stages:
+  validate:
+    actions:
+      - type: liquibase
+        command: validate
+
+  status:
+    actions:
+      - type: liquibase
+        command: status
+        cmdArgs: {verbose: true}
+
+  deploy:
+    actions:
+      - type: liquibase
+        command: update
+        cmdArgs: {report-enabled: true, report-name: "deploy-${ENVIRONMENT}.html"}
+
+  dbt:
+    actions:
+      - type: shell
+        command: |
+          cd dbt
+          dbt run --target ${ENVIRONMENT}
+          dbt test --target ${ENVIRONMENT}
+
+  snapshot:
+    actions:
+      - type: liquibase
+        command: snapshot
+        cmdArgs: {output-file: "snapshot-${ENVIRONMENT}.json"}

@@ -1,0 +1,72 @@
+version: 2
+
+sources:
+  - name: public
+    description: "Raw tables managed by Liquibase in the PUBLIC schema"
+    schema: public
+    tables:
+      - name: customers
+        description: "Customer information"
+        columns:
+          - name: customer_id
+            description: "Primary key for customers"
+            tests:
+              - not_null
+              - unique
+          - name: email
+            description: "Customer email address"
+            tests:
+              - not_null
+              - unique
+
+      - name: products
+        description: "Product catalog"
+        columns:
+          - name: product_id
+            description: "Primary key for products"
+            tests:
+              - not_null
+              - unique
+          - name: price
+            description: "Product price"
+            tests:
+              - not_null
+
+      - name: orders
+        description: "Order headers"
+        columns:
+          - name: order_id
+            description: "Primary key for orders"
+            tests:
+              - not_null
+              - unique
+          - name: customer_id
+            description: "Foreign key to customers"
+            tests:
+              - not_null
+              - relationships:
+                  to: source('public', 'customers')
+                  field: customer_id
+
+      - name: order_items
+        description: "Order line items"
+        columns:
+          - name: order_item_id
+            description: "Primary key for order items"
+            tests:
+              - not_null
+              - unique
+          - name: order_id
+            description: "Foreign key to orders"
+            tests:
+              - not_null
+              - relationships:
+                  to: source('public', 'orders')
+                  field: order_id
+          - name: product_id
+            description: "Foreign key to products"
+            tests:
+              - not_null
+              - relationships:
+                  to: source('public', 'products')
+                  field: product_id

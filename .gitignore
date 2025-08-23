@@ -1,0 +1,40 @@
+# Local environment files (contain sensitive credentials)
+.env
+.env.local
+.env.*.local
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+liquibase.log
+dbt.log
+
+# Reports and artifacts
+reports/
+artifacts/
+*.html
+*.json
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+
+# Temporary files
+*.tmp
+*.temp

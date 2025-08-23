@@ -23,6 +23,7 @@ jobs:
             --flow-file=liquibase/flowfiles/deploy.flowfile.yaml \
             --defaults-file=liquibase/properties/liquibase.dev.properties
         env:
+          LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
           LIQUIBASE_PASSWORD: ${{ secrets.LIQUIBASE_DEV_PASSWORD }}
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           DBT_PASSWORD: ${{ secrets.DBT_DEV_PASSWORD }}

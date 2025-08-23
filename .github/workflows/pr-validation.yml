@@ -21,6 +21,7 @@ jobs:
           liquibase validate \
             --defaults-file=liquibase/properties/liquibase.dev.properties
         env:
+          LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
           LIQUIBASE_PASSWORD: ${{ secrets.LIQUIBASE_DEV_PASSWORD }}
       
       - name: Setup Python

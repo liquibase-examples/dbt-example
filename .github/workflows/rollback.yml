@@ -35,6 +35,7 @@ jobs:
             --tag=${{ inputs.target_tag }} \
             --defaults-file=liquibase/properties/liquibase.${{ inputs.environment }}.properties
         env:
+          LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
           LIQUIBASE_PASSWORD: ${{ secrets[format('LIQUIBASE_{0}_PASSWORD', upper(inputs.environment))] }}
       
       - name: Revert dbt Models

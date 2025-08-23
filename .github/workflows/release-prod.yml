@@ -33,6 +33,7 @@ jobs:
             --flow-file=liquibase/flowfiles/deploy.flowfile.yaml \
             --defaults-file=liquibase/properties/liquibase.prod.properties
         env:
+          LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
           LIQUIBASE_PASSWORD: ${{ secrets.LIQUIBASE_PROD_PASSWORD }}
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           DBT_PASSWORD: ${{ secrets.DBT_PROD_PASSWORD }}
@@ -45,4 +46,5 @@ jobs:
             --tag=${{ github.event.release.tag_name }} \
             --defaults-file=liquibase/properties/liquibase.prod.properties
         env:
+          LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
           LIQUIBASE_PASSWORD: ${{ secrets.LIQUIBASE_PROD_PASSWORD }}

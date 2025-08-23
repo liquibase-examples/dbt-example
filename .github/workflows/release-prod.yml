@@ -34,6 +34,7 @@ jobs:
             --defaults-file=liquibase/properties/liquibase.prod.properties
         env:
           LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
+          LIQUIBASE_COMMAND_URL: jdbc:snowflake://${{ secrets.SNOWFLAKE_ACCOUNT }}.snowflakecomputing.com/?db=ONLINE_STORE_DB&schema=PUBLIC&warehouse=COMPUTE_WH
           LIQUIBASE_PASSWORD: ${{ secrets.LIQUIBASE_PROD_PASSWORD }}
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           DBT_PASSWORD: ${{ secrets.DBT_PROD_PASSWORD }}
@@ -47,4 +48,5 @@ jobs:
             --defaults-file=liquibase/properties/liquibase.prod.properties
         env:
           LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
+          LIQUIBASE_COMMAND_URL: jdbc:snowflake://${{ secrets.SNOWFLAKE_ACCOUNT }}.snowflakecomputing.com/?db=ONLINE_STORE_DB&schema=PUBLIC&warehouse=COMPUTE_WH
           LIQUIBASE_PASSWORD: ${{ secrets.LIQUIBASE_PROD_PASSWORD }}

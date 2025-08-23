@@ -11,7 +11,7 @@ jobs:
     
     steps:
       - name: Download Release Artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: changelog-${{ github.event.release.target_commitish }}
           path: release-artifact
@@ -21,9 +21,10 @@ jobs:
           unzip release-artifact/changelog-*.zip -d deployment
       
       - name: Setup Liquibase
-        uses: liquibase-github-actions/setup-liquibase@v7.0.0
+        uses: liquibase/setup-liquibase@v1
         with:
-          liquibase-version: '4.29.0'
+          version: '4.29.0'
+          edition: 'oss'
       
       - name: Deploy to Production
         run: |

@@ -26,7 +26,7 @@ jobs:
       - name: Setup Liquibase
         uses: liquibase/setup-liquibase@v1
         with:
-          version: '4.29.0'
+          version: '4.32.0'
           edition: 'oss'
       
       - name: Rollback Database

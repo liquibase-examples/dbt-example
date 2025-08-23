@@ -23,6 +23,7 @@ jobs:
         env:
           LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
           LIQUIBASE_COMMAND_URL: jdbc:snowflake://${{ secrets.SNOWFLAKE_ACCOUNT }}.snowflakecomputing.com/?db=ONLINE_STORE_DEV&schema=PUBLIC&warehouse=COMPUTE_WH
+          LIQUIBASE_COMMAND_USERNAME: LIQUIBASE_USER
           LIQUIBASE_PASSWORD: ${{ secrets.LIQUIBASE_DEV_PASSWORD }}
       
       - name: Setup Python

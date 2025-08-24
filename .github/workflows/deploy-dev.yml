@@ -40,6 +40,36 @@ jobs:
           DBT_PASSWORD: ${{ secrets.DBT_DEV_PASSWORD }}
           ENVIRONMENT: dev
       
+      - name: Upload Liquibase Deployment Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: liquibase-deployment-report-${{ github.sha }}
+          path: deploy-dev.html
+          retention-days: 30
+      
+      - name: Add Deployment Report to Summary
+        if: always()
+        run: |
+          if [ -f "deploy-dev.html" ]; then
+            echo "## 📊 Liquibase Deployment Report" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **Liquibase deployment report generated successfully**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "📄 **[Download Deployment Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The HTML report contains detailed information about:" >> $GITHUB_STEP_SUMMARY
+            echo "- Applied changesets" >> $GITHUB_STEP_SUMMARY
+            echo "- Database objects created/modified" >> $GITHUB_STEP_SUMMARY
+            echo "- Execution summary and statistics" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "💡 **Tip:** Download the artifact and open the HTML file in your browser to view the full report." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Liquibase deployment report not found**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The deployment may have completed without generating a report." >> $GITHUB_STEP_SUMMARY
+          fi
+      
       - name: Create Changelog Artifact
         run: |
           mkdir -p artifacts

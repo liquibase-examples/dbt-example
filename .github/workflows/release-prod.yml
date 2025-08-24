@@ -41,6 +41,37 @@ jobs:
           DBT_PASSWORD: ${{ secrets.DBT_PROD_PASSWORD }}
           ENVIRONMENT: prod
       
+      - name: Upload Production Deployment Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: liquibase-production-report-${{ github.event.release.tag_name }}
+          path: deployment/deploy-prod.html
+          retention-days: 90
+      
+      - name: Add Production Deployment Report to Summary
+        if: always()
+        run: |
+          if [ -f "deployment/deploy-prod.html" ]; then
+            echo "## 🚀 Production Deployment Report" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **Production deployment completed successfully for release ${{ github.event.release.tag_name }}**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "📄 **[Download Production Deployment Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The HTML report contains detailed information about:" >> $GITHUB_STEP_SUMMARY
+            echo "- Applied changesets in production" >> $GITHUB_STEP_SUMMARY
+            echo "- Database objects created/modified" >> $GITHUB_STEP_SUMMARY
+            echo "- Production deployment statistics" >> $GITHUB_STEP_SUMMARY
+            echo "- Database tagged as: ${{ github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "💡 **Tip:** Download the artifact and open the HTML file in your browser to view the full report." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Production deployment report not found**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The deployment may have completed without generating a report." >> $GITHUB_STEP_SUMMARY
+          fi
+      
       - name: Tag Database State
         run: |
           cd deployment

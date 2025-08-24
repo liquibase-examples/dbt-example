@@ -4,6 +4,17 @@ on:
   push:
     branches: [main]
 
+# Add permissions for GitHub Pages deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent pages deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -40,6 +51,90 @@ jobs:
           DBT_PASSWORD: ${{ secrets.DBT_DEV_PASSWORD }}
           ENVIRONMENT: dev
       
+      # Prepare GitHub Pages deployment
+      - name: Prepare Pages Content
+        if: always()
+        run: |
+          echo "Preparing Pages content..."
+          
+          # Create directory structure for Pages
+          mkdir -p pages/reports/run-${{ github.run_number }}
+          
+          # Copy HTML report if it exists
+          if [ -f "deploy-dev.html" ]; then
+            cp deploy-dev.html pages/reports/run-${{ github.run_number }}/
+          fi
+          
+          # Copy snapshot if it exists
+          if [ -f "snapshot-dev.json" ]; then
+            cp snapshot-dev.json pages/reports/run-${{ github.run_number }}/
+          fi
+          
+          # Note: Each run gets its own permanent URL
+          
+          # Create index.html for this run
+          cat > pages/reports/run-${{ github.run_number }}/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>dbt + Liquibase Deployment Report - Run ${{ github.run_number }}</title>
+              <style>
+                  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 40px; background: #f8fafc; }
+                  .header { background: white; border-radius: 8px; padding: 30px; margin-bottom: 30px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+                  .header h1 { margin: 0 0 10px 0; color: #1a202c; }
+                  .metadata { color: #718096; margin-bottom: 20px; }
+                  .reports { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+                  .report-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+                  .report-card h3 { margin-top: 0; color: #2563eb; }
+                  .report-link { display: inline-block; background: #2563eb; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500; }
+                  .report-link:hover { background: #1d4ed8; }
+              </style>
+          </head>
+          <body>
+              <div class="header">
+                  <h1>🚀 dbt + Liquibase Deployment</h1>
+                  <div class="metadata">
+                      <p><strong>Run:</strong> ${{ github.run_number }} | <strong>Commit:</strong> ${{ github.sha }} | <strong>Branch:</strong> ${{ github.ref_name }}</p>
+                      <p><strong>Date:</strong> $(date -u) | <strong>Environment:</strong> dev</p>
+                  </div>
+              </div>
+              
+              <div class="reports">
+                  <div class="report-card">
+                      <h3>📊 Deployment Report</h3>
+                      <p>Complete Liquibase deployment report with changeset details, execution summary, and performance metrics.</p>
+                      <a href="deploy-dev.html" class="report-link">View Report</a>
+                  </div>
+                  
+                  <div class="report-card">
+                      <h3>📸 Database Snapshot</h3>
+                      <p>JSON snapshot of the database state after deployment completion.</p>
+                      <a href="snapshot-dev.json" class="report-link">View Snapshot</a>
+                  </div>
+              </div>
+              
+              <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #718096;">
+                  <p><a href="../">← Back to all runs</a> | <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">GitHub Actions Run</a></p>
+              </div>
+          </body>
+          </html>
+          EOF
+          
+          echo "Pages content prepared for run ${{ github.run_number }}"
+
+      # Setup GitHub Pages
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
+      # Upload to GitHub Pages
+      - name: Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages
+
+      # Keep existing artifact upload for backward compatibility
       - name: Upload Liquibase Deployment Report
         if: always()
         uses: actions/upload-artifact@v4
@@ -56,18 +151,18 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "✅ **Liquibase deployment report generated successfully**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "📄 **Artifact Name:** \`liquibase-deployment-report-${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "### 🌐 View Online (No Download Required)" >> $GITHUB_STEP_SUMMARY
+            echo "📋 **[View Deployment Report](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/reports/run-${{ github.run_number }}/)**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**📥 How to Download the Report:**" >> $GITHUB_STEP_SUMMARY
-            echo "1. Scroll down to the **Artifacts** section at the bottom of this page" >> $GITHUB_STEP_SUMMARY
-            echo "2. Click on \`liquibase-deployment-report-${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY  
-            echo "3. Open the downloaded HTML file in your browser" >> $GITHUB_STEP_SUMMARY
+            echo "### 📥 Download Report (Alternative)" >> $GITHUB_STEP_SUMMARY
+            echo "📄 **Artifact Name:** \`liquibase-deployment-report-${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**📋 The HTML report contains:**" >> $GITHUB_STEP_SUMMARY
             echo "- Applied changesets and their details" >> $GITHUB_STEP_SUMMARY
             echo "- Database objects created/modified" >> $GITHUB_STEP_SUMMARY
             echo "- Execution summary and statistics" >> $GITHUB_STEP_SUMMARY
             echo "- Deployment timeline and performance metrics" >> $GITHUB_STEP_SUMMARY
+            echo "- Database snapshot (JSON format)" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ **Liquibase deployment report not found**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
@@ -89,3 +184,15 @@ jobs:
           name: changelog-${{ github.sha }}
           path: artifacts/changelog-${{ github.sha }}.zip
           retention-days: 90
+
+  # Deploy to GitHub Pages
+  deploy-pages:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

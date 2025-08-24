@@ -25,20 +25,15 @@ echo "📊 Connecting to Snowflake account: $SNOWFLAKE_ACCOUNT"
 
 # Create SQL commands for the reset
 RESET_SQL="
--- First, take ownership of the existing database if it exists
--- This ensures we can drop it properly
-GRANT OWNERSHIP ON DATABASE ONLINE_STORE_DEV TO ROLE DATABASE_ADMIN_ROLE REVOKE CURRENT GRANTS;
-
 -- Drop the existing dev database (if it exists)
+-- Note: DATABASE_ADMIN_ROLE must own this database
 DROP DATABASE IF EXISTS ONLINE_STORE_DEV;
 
 -- Create fresh dev database from ONLINE_STORE_DB (the master)
+-- DATABASE_ADMIN_ROLE will automatically own this new database
 CREATE DATABASE ONLINE_STORE_DEV 
     CLONE ONLINE_STORE_DB
     COMMENT = 'Development database - freshly cloned from master';
-
--- Grant ownership to DATABASE_ADMIN_ROLE for future operations
-GRANT OWNERSHIP ON DATABASE ONLINE_STORE_DEV TO ROLE DATABASE_ADMIN_ROLE;
 
 -- Grant permissions to both roles on the new dev database
 GRANT USAGE ON DATABASE ONLINE_STORE_DEV TO ROLE LIQUIBASE_ROLE;

@@ -60,8 +60,9 @@ SHOW GRANTS TO ROLE DATABASE_ADMIN_ROLE;
 -- IMPORTANT SETUP INSTRUCTIONS:
 -- =====================================================
 -- 1. Run this script as ACCOUNTADMIN role
--- 2. If ONLINE_STORE_DEV already exists, manually run:
---    GRANT OWNERSHIP ON DATABASE ONLINE_STORE_DEV TO ROLE DATABASE_ADMIN_ROLE;
+-- 2. If ONLINE_STORE_DEV already exists, transfer ownership by running:
+--    GRANT OWNERSHIP ON DATABASE ONLINE_STORE_DEV TO ROLE DATABASE_ADMIN_ROLE REVOKE CURRENT GRANTS;
+--    Note: This will revoke all existing grants. Re-run the reset script to restore permissions.
 -- 3. Update your .env file with: DATABASE_ADMIN_PASSWORD=DbAdmin2024#Reset!
 -- 4. Add DATABASE_ADMIN_PASSWORD to GitHub repository secrets
 -- =====================================================

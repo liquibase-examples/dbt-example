@@ -1,0 +1,89 @@
+name: Cleanup Orphaned PR Databases
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC to clean up any orphaned PR databases
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    # Allow manual triggering for immediate cleanup
+
+jobs:
+  cleanup-orphaned:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Snowflake CLI
+        uses: snowflakedb/snowflake-cli-action@v1.5
+      
+      - name: Cleanup Orphaned PR Databases
+        run: |
+          echo "🧹 Starting cleanup of orphaned PR databases..."
+          echo "📊 Connecting to Snowflake account: ${{ secrets.SNOWFLAKE_ACCOUNT }}"
+          
+          # Create SQL to find and cleanup orphaned PR databases
+          cat << 'EOF' > cleanup_orphaned.sql
+          -- Find all databases matching PR pattern that are older than 7 days
+          -- This catches databases from failed workflows that didn't complete cleanup
+          
+          SET seven_days_ago = DATEADD(day, -7, CURRENT_TIMESTAMP());
+          
+          -- Get list of PR databases older than 7 days
+          SHOW DATABASES LIKE 'PR-%';
+          
+          -- Create a procedure to drop old PR databases
+          CREATE OR REPLACE PROCEDURE cleanup_old_pr_databases()
+          RETURNS STRING
+          LANGUAGE SQL
+          AS
+          $$
+          DECLARE
+            database_name STRING;
+            created_on TIMESTAMP_NTZ;
+            drop_count INTEGER DEFAULT 0;
+            result_set RESULTSET;
+            cursor_sql STRING := 'SHOW DATABASES LIKE ''PR-%''';
+          BEGIN
+            result_set := (EXECUTE IMMEDIATE cursor_sql);
+            
+            FOR record IN result_set DO
+              database_name := record."name";
+              created_on := record."created_on";
+              
+              -- Check if database is older than 7 days
+              IF (created_on < DATEADD(day, -7, CURRENT_TIMESTAMP())) THEN
+                EXECUTE IMMEDIATE 'DROP DATABASE IF EXISTS ' || database_name;
+                drop_count := drop_count + 1;
+              END IF;
+            END FOR;
+            
+            RETURN 'Cleaned up ' || drop_count || ' orphaned PR databases';
+          END;
+          $$;
+          
+          -- Execute the cleanup procedure
+          CALL cleanup_old_pr_databases();
+          
+          -- Clean up the procedure
+          DROP PROCEDURE cleanup_old_pr_databases();
+          
+          -- Show remaining PR databases for verification
+          SHOW DATABASES LIKE 'PR-%';
+          EOF
+          
+          echo "🔍 Searching for PR databases older than 7 days..."
+          
+          # Execute cleanup using database admin privileges
+          snow sql -f cleanup_orphaned.sql --temporary-connection \
+            --account "${{ secrets.SNOWFLAKE_ACCOUNT }}" \
+            --user DATABASE_ADMIN_USER \
+            --password "${{ secrets.DATABASE_ADMIN_PASSWORD }}" \
+            --role DATABASE_ADMIN_ROLE \
+            --warehouse COMPUTE_WH
+          
+          echo ""
+          echo "✅ Orphaned PR database cleanup completed!"
+          echo "📊 Any PR databases older than 7 days have been removed"
+          echo "💡 This helps prevent database sprawl from failed GitHub Actions workflows"

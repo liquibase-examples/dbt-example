@@ -7,8 +7,58 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    env:
+      PR_DATABASE_NAME: PR-${{ github.event.number }}-RUN-${{ github.run_id }}-ONLINE-STORE-DEV-CLONE
+    
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Setup Snowflake CLI
+        uses: snowflakedb/snowflake-cli-action@v1.5
+      
+      - name: Create PR Database Clone
+        run: |
+          echo "🔄 Creating PR database clone: $PR_DATABASE_NAME"
+          echo "📊 Connecting to Snowflake account: ${{ secrets.SNOWFLAKE_ACCOUNT }}"
+          
+          # Create SQL for PR database clone
+          cat << 'EOF' > create_pr_clone.sql
+          -- Create PR database clone from ONLINE_STORE_DEV
+          CREATE DATABASE ${{ env.PR_DATABASE_NAME }} 
+              CLONE ONLINE_STORE_DEV
+              COMMENT = 'PR #${{ github.event.number }} validation database - auto-created by GitHub Actions';
+          
+          -- Grant permissions to both roles on the PR database
+          GRANT USAGE ON DATABASE ${{ env.PR_DATABASE_NAME }} TO ROLE LIQUIBASE_ROLE;
+          GRANT USAGE ON DATABASE ${{ env.PR_DATABASE_NAME }} TO ROLE DBT_ROLE;
+          
+          -- Transfer schema ownership to enable full privileges
+          GRANT OWNERSHIP ON SCHEMA ${{ env.PR_DATABASE_NAME }}.PUBLIC TO ROLE LIQUIBASE_ROLE COPY CURRENT GRANTS;
+          GRANT OWNERSHIP ON SCHEMA ${{ env.PR_DATABASE_NAME }}.DBT TO ROLE DBT_ROLE COPY CURRENT GRANTS;
+          
+          -- Grant cross-schema access
+          GRANT USAGE ON SCHEMA ${{ env.PR_DATABASE_NAME }}.PUBLIC TO ROLE DBT_ROLE;
+          GRANT SELECT ON ALL TABLES IN SCHEMA ${{ env.PR_DATABASE_NAME }}.PUBLIC TO ROLE DBT_ROLE;
+          GRANT SELECT ON ALL VIEWS IN SCHEMA ${{ env.PR_DATABASE_NAME }}.PUBLIC TO ROLE DBT_ROLE;
+          
+          GRANT USAGE ON SCHEMA ${{ env.PR_DATABASE_NAME }}.DBT TO ROLE LIQUIBASE_ROLE;
+          GRANT SELECT ON ALL TABLES IN SCHEMA ${{ env.PR_DATABASE_NAME }}.DBT TO ROLE LIQUIBASE_ROLE;
+          GRANT SELECT ON ALL VIEWS IN SCHEMA ${{ env.PR_DATABASE_NAME }}.DBT TO ROLE LIQUIBASE_ROLE;
+          
+          -- Show result
+          SELECT 'PR database clone created successfully' AS status;
+          SHOW DATABASES LIKE '%${{ env.PR_DATABASE_NAME }}%';
+          EOF
+          
+          # Execute the clone SQL using database admin privileges
+          snow sql -f create_pr_clone.sql --temporary-connection \
+            --account "${{ secrets.SNOWFLAKE_ACCOUNT }}" \
+            --user DATABASE_ADMIN_USER \
+            --password "${{ secrets.DATABASE_ADMIN_PASSWORD }}" \
+            --role DATABASE_ADMIN_ROLE \
+            --warehouse COMPUTE_WH
+          
+          echo "✅ PR database clone created: $PR_DATABASE_NAME"
       
       - name: Setup Liquibase
         uses: liquibase/setup-liquibase@v1
@@ -16,13 +66,14 @@ jobs:
           version: '4.32.0'
           edition: 'oss'
       
-      - name: Validate Liquibase Changelog
+      - name: Deploy Liquibase Changes to PR Database
         run: |
-          liquibase validate \
+          echo "🚀 Deploying Liquibase changes to $PR_DATABASE_NAME"
+          liquibase update \
             --defaults-file=liquibase/properties/liquibase.dev.properties
         env:
           LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
-          LIQUIBASE_COMMAND_URL: jdbc:snowflake://${{ secrets.SNOWFLAKE_ACCOUNT }}.snowflakecomputing.com/?db=ONLINE_STORE_DEV&schema=PUBLIC&warehouse=COMPUTE_WH
+          LIQUIBASE_COMMAND_URL: jdbc:snowflake://${{ secrets.SNOWFLAKE_ACCOUNT }}.snowflakecomputing.com/?db=${{ env.PR_DATABASE_NAME }}&schema=PUBLIC&warehouse=COMPUTE_WH
           LIQUIBASE_COMMAND_USERNAME: LIQUIBASE_USER
           LIQUIBASE_COMMAND_PASSWORD: ${{ secrets.LIQUIBASE_DEV_PASSWORD }}
       
@@ -35,11 +86,41 @@ jobs:
         run: |
           pip install dbt-snowflake
       
-      - name: Test dbt Compilation
+      - name: Run dbt Pipeline on PR Database
         run: |
+          echo "📊 Running dbt transformations on $PR_DATABASE_NAME"
           cd dbt
           dbt deps
-          dbt compile --target dev
+          
+          # Update profiles.yml to use PR database
+          sed -i "s/database: ONLINE_STORE_DEV/database: $PR_DATABASE_NAME/g" profiles.yml
+          
+          dbt run --target dev
+          dbt test --target dev
         env:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           DBT_PASSWORD: ${{ secrets.DBT_DEV_PASSWORD }}
+      
+      - name: Cleanup PR Database
+        if: always()
+        run: |
+          echo "🧹 Cleaning up PR database: $PR_DATABASE_NAME"
+          
+          # Create SQL for cleanup
+          cat << 'EOF' > cleanup_pr_database.sql
+          -- Drop the PR database
+          DROP DATABASE IF EXISTS ${{ env.PR_DATABASE_NAME }};
+          
+          -- Confirm cleanup
+          SELECT 'PR database cleanup completed' AS status;
+          EOF
+          
+          # Execute cleanup using database admin privileges
+          snow sql -f cleanup_pr_database.sql --temporary-connection \
+            --account "${{ secrets.SNOWFLAKE_ACCOUNT }}" \
+            --user DATABASE_ADMIN_USER \
+            --password "${{ secrets.DATABASE_ADMIN_PASSWORD }}" \
+            --role DATABASE_ADMIN_ROLE \
+            --warehouse COMPUTE_WH
+          
+          echo "✅ PR database cleanup completed: $PR_DATABASE_NAME"

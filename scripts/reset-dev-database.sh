@@ -52,12 +52,11 @@ GRANT USAGE ON SCHEMA ONLINE_STORE_DEV.DBT TO ROLE LIQUIBASE_ROLE;
 GRANT SELECT ON ALL TABLES IN SCHEMA ONLINE_STORE_DEV.DBT TO ROLE LIQUIBASE_ROLE;
 GRANT SELECT ON ALL VIEWS IN SCHEMA ONLINE_STORE_DEV.DBT TO ROLE LIQUIBASE_ROLE;
 
--- Grant future object permissions (owners automatically get ALL)
-GRANT SELECT ON FUTURE TABLES IN SCHEMA ONLINE_STORE_DEV.PUBLIC TO ROLE DBT_ROLE;
-GRANT SELECT ON FUTURE VIEWS IN SCHEMA ONLINE_STORE_DEV.PUBLIC TO ROLE DBT_ROLE;
-
-GRANT SELECT ON FUTURE TABLES IN SCHEMA ONLINE_STORE_DEV.DBT TO ROLE LIQUIBASE_ROLE;
-GRANT SELECT ON FUTURE VIEWS IN SCHEMA ONLINE_STORE_DEV.DBT TO ROLE LIQUIBASE_ROLE;
+-- Note: Future grants are not needed here because:
+-- 1. LIQUIBASE_ROLE owns PUBLIC schema (gets ALL privileges automatically)  
+-- 2. DBT_ROLE owns DBT schema (gets ALL privileges automatically)
+-- 3. Cross-schema SELECT access is already granted above
+-- Schema owners will set their own future grants as needed
 
 -- Show result
 SELECT 'Database reset completed successfully' AS status;

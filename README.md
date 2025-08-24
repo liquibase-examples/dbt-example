@@ -2,6 +2,8 @@
 
 This repository demonstrates best practices for integrating Liquibase database schema management with dbt analytics transformations in Snowflake. The pattern implements a clear separation of concerns where Liquibase manages structural database changes while dbt handles data transformations and analytics models.
 
+**✨ Now with GitHub Pages deployment!** All Liquibase deployment reports are automatically deployed to GitHub Pages for instant browser access without downloads.
+
 ## Architecture Overview
 
 ### Separation of Duties

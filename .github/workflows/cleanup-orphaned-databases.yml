@@ -31,7 +31,7 @@ jobs:
           SET seven_days_ago = DATEADD(day, -7, CURRENT_TIMESTAMP());
           
           -- Get list of PR databases older than 7 days
-          SHOW DATABASES LIKE 'PR-%';
+          SHOW DATABASES LIKE 'PR_%';
           
           -- Create a procedure to drop old PR databases
           CREATE OR REPLACE PROCEDURE cleanup_old_pr_databases()
@@ -44,7 +44,7 @@ jobs:
             created_on TIMESTAMP_NTZ;
             drop_count INTEGER DEFAULT 0;
             result_set RESULTSET;
-            cursor_sql STRING := 'SHOW DATABASES LIKE ''PR-%''';
+            cursor_sql STRING := 'SHOW DATABASES LIKE ''PR_%''';
           BEGIN
             result_set := (EXECUTE IMMEDIATE cursor_sql);
             
@@ -70,7 +70,7 @@ jobs:
           DROP PROCEDURE cleanup_old_pr_databases();
           
           -- Show remaining PR databases for verification
-          SHOW DATABASES LIKE 'PR-%';
+          SHOW DATABASES LIKE 'PR_%';
           EOF
           
           echo "🔍 Searching for PR databases older than 7 days..."

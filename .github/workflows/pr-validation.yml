@@ -8,7 +8,7 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     env:
-      PR_DATABASE_NAME: PR-${{ github.event.number }}-RUN-${{ github.run_id }}-ONLINE-STORE-DEV-CLONE
+      PR_DATABASE_NAME: PR_${{ github.event.number }}_RUN_${{ github.run_id }}_ONLINE_STORE_DEV_CLONE
     
     steps:
       - uses: actions/checkout@v4

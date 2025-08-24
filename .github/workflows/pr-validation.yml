@@ -23,9 +23,11 @@ jobs:
           
           # Create SQL for PR database clone
           cat << 'EOF' > create_pr_clone.sql
-          -- Create PR database clone from ONLINE_STORE_DEV
+          -- Create PR database clone from ONLINE_STORE_DB (master database)
+          -- Note: We clone from the master DB where DATABASE_ADMIN_ROLE owns both schemas,
+          -- allowing proper ownership transfer to LIQUIBASE_ROLE and DBT_ROLE
           CREATE DATABASE ${{ env.PR_DATABASE_NAME }} 
-              CLONE ONLINE_STORE_DEV
+              CLONE ONLINE_STORE_DB
               COMMENT = 'PR #${{ github.event.number }} validation database - auto-created by GitHub Actions';
           
           -- Grant permissions to both roles on the PR database

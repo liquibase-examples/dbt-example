@@ -15,9 +15,9 @@ else
 fi
 
 # Check required variables
-if [ -z "${SNOWFLAKE_ACCOUNT:-}" ] || [ -z "${LIQUIBASE_PASSWORD:-}" ]; then
+if [ -z "${SNOWFLAKE_ACCOUNT:-}" ] || [ -z "${DATABASE_ADMIN_PASSWORD:-}" ]; then
     echo "❌ Missing required environment variables"
-    echo "   Please ensure SNOWFLAKE_ACCOUNT and LIQUIBASE_PASSWORD are set in .env"
+    echo "   Please ensure SNOWFLAKE_ACCOUNT and DATABASE_ADMIN_PASSWORD are set in .env"
     exit 1
 fi
 
@@ -71,9 +71,9 @@ echo "📋 Cloning fresh copy from ONLINE_STORE_DB (master)..."
 if command -v snow >/dev/null 2>&1; then
     echo "$RESET_SQL" | snow sql --temporary-connection \
         --account "$SNOWFLAKE_ACCOUNT" \
-        --user LIQUIBASE_USER \
-        --password "$LIQUIBASE_PASSWORD" \
-        --role LIQUIBASE_ROLE \
+        --user DATABASE_ADMIN_USER \
+        --password "$DATABASE_ADMIN_PASSWORD" \
+        --role DATABASE_ADMIN_ROLE \
         --warehouse COMPUTE_WH \
         --silent
 else

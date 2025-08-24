@@ -63,12 +63,12 @@ jobs:
           echo "🗑️ Dropping existing ONLINE_STORE_DEV..."
           echo "📋 Cloning fresh copy from ONLINE_STORE_DB (master)..."
           
-          # Execute the reset SQL using temporary connection
+          # Execute the reset SQL using temporary connection with database admin privileges
           snow sql -f reset_dev.sql --temporary-connection \
             --account "${{ secrets.SNOWFLAKE_ACCOUNT }}" \
-            --user LIQUIBASE_USER \
-            --password "${{ secrets.LIQUIBASE_DEV_PASSWORD }}" \
-            --role LIQUIBASE_ROLE \
+            --user DATABASE_ADMIN_USER \
+            --password "${{ secrets.DATABASE_ADMIN_PASSWORD }}" \
+            --role DATABASE_ADMIN_ROLE \
             --warehouse COMPUTE_WH
           
           echo ""

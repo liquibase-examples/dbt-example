@@ -36,6 +36,9 @@ ONLINE_STORE_DB
    ```sql
    -- Execute scripts/snowflake_setup.sql in your Snowflake account
    -- This creates the required databases, users, roles, and permissions
+   
+   -- Then execute scripts/database-admin-setup.sql as ACCOUNTADMIN
+   -- This creates the database admin user for dev database reset operations
    ```
 
 2. **Setup Local Environment**
@@ -47,6 +50,7 @@ ONLINE_STORE_DB
    # SNOWFLAKE_ACCOUNT=your-account.region.cloud
    # LIQUIBASE_PASSWORD=your_liquibase_password
    # DBT_PASSWORD=your_dbt_password
+   # DATABASE_ADMIN_PASSWORD=your_database_admin_password
    ```
 
 3. **Deploy Schema Changes**
@@ -68,6 +72,7 @@ For automated deployments, configure these GitHub Secrets:
 - `SNOWFLAKE_ACCOUNT` - your account identifier
 - `LIQUIBASE_DEV_PASSWORD` / `LIQUIBASE_PROD_PASSWORD`
 - `DBT_DEV_PASSWORD` / `DBT_PROD_PASSWORD`
+- `DATABASE_ADMIN_PASSWORD` - for dev database reset operations
 
 ## Directory Structure
 

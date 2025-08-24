@@ -56,14 +56,18 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "✅ **Liquibase deployment report generated successfully**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "📄 **[Download Deployment Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**" >> $GITHUB_STEP_SUMMARY
+            echo "📄 **Artifact Name:** \`liquibase-deployment-report-${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "The HTML report contains detailed information about:" >> $GITHUB_STEP_SUMMARY
-            echo "- Applied changesets" >> $GITHUB_STEP_SUMMARY
+            echo "**📥 How to Download the Report:**" >> $GITHUB_STEP_SUMMARY
+            echo "1. Scroll down to the **Artifacts** section at the bottom of this page" >> $GITHUB_STEP_SUMMARY
+            echo "2. Click on \`liquibase-deployment-report-${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY  
+            echo "3. Open the downloaded HTML file in your browser" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**📋 The HTML report contains:**" >> $GITHUB_STEP_SUMMARY
+            echo "- Applied changesets and their details" >> $GITHUB_STEP_SUMMARY
             echo "- Database objects created/modified" >> $GITHUB_STEP_SUMMARY
             echo "- Execution summary and statistics" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "💡 **Tip:** Download the artifact and open the HTML file in your browser to view the full report." >> $GITHUB_STEP_SUMMARY
+            echo "- Deployment timeline and performance metrics" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ **Liquibase deployment report not found**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY

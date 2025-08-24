@@ -57,15 +57,19 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "✅ **Production deployment completed successfully for release ${{ github.event.release.tag_name }}**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "📄 **[Download Production Deployment Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**" >> $GITHUB_STEP_SUMMARY
+            echo "📄 **Artifact Name:** \`liquibase-production-report-${{ github.event.release.tag_name }}\`" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "The HTML report contains detailed information about:" >> $GITHUB_STEP_SUMMARY
-            echo "- Applied changesets in production" >> $GITHUB_STEP_SUMMARY
+            echo "**📥 How to Download the Report:**" >> $GITHUB_STEP_SUMMARY
+            echo "1. Scroll down to the **Artifacts** section at the bottom of this page" >> $GITHUB_STEP_SUMMARY
+            echo "2. Click on \`liquibase-production-report-${{ github.event.release.tag_name }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "3. Open the downloaded HTML file in your browser" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**📋 The production report contains:**" >> $GITHUB_STEP_SUMMARY
+            echo "- Applied changesets in production environment" >> $GITHUB_STEP_SUMMARY
             echo "- Database objects created/modified" >> $GITHUB_STEP_SUMMARY
-            echo "- Production deployment statistics" >> $GITHUB_STEP_SUMMARY
-            echo "- Database tagged as: ${{ github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "💡 **Tip:** Download the artifact and open the HTML file in your browser to view the full report." >> $GITHUB_STEP_SUMMARY
+            echo "- Production deployment statistics and metrics" >> $GITHUB_STEP_SUMMARY
+            echo "- Database tagged as: \`${{ github.event.release.tag_name }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Compliance and audit information" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ **Production deployment report not found**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY

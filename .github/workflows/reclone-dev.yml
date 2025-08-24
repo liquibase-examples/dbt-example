@@ -16,11 +16,11 @@ jobs:
       
       - name: Reset Development Database
         env:
-          SNOWFLAKE_CONNECTIONS_DEFAULT_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_CONNECTIONS_DEFAULT_USER: LIQUIBASE_USER
-          SNOWFLAKE_CONNECTIONS_DEFAULT_PASSWORD: ${{ secrets.LIQUIBASE_DEV_PASSWORD }}
-          SNOWFLAKE_CONNECTIONS_DEFAULT_ROLE: LIQUIBASE_ROLE
-          SNOWFLAKE_CONNECTIONS_DEFAULT_WAREHOUSE: COMPUTE_WH
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_USER: LIQUIBASE_USER
+          SNOWFLAKE_PASSWORD: ${{ secrets.LIQUIBASE_DEV_PASSWORD }}
+          SNOWFLAKE_ROLE: LIQUIBASE_ROLE
+          SNOWFLAKE_WAREHOUSE: COMPUTE_WH
         run: |
           echo "🔄 Resetting development database..."
           echo "📊 Connecting to Snowflake account: ${{ secrets.SNOWFLAKE_ACCOUNT }}"

@@ -94,13 +94,12 @@ jobs:
           cd dbt
           dbt deps
           
-          # Update profiles.yml to use PR database
-          sed -i "s/database: ONLINE_STORE_DEV/database: $PR_DATABASE_NAME/g" profiles.yml
-          
+          # Connect to PR database using environment variable
           dbt run --target dev
           dbt test --target dev
         env:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_DATABASE: ${{ env.PR_DATABASE_NAME }}
           DBT_PASSWORD: ${{ secrets.DBT_DEV_PASSWORD }}
       
       - name: Cleanup PR Database

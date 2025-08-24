@@ -53,6 +53,12 @@ GRANT SELECT ON FUTURE VIEWS IN SCHEMA ONLINE_STORE_DB.DBT TO ROLE DATABASE_ADMI
 -- Assign the role to the user
 GRANT ROLE DATABASE_ADMIN_ROLE TO USER DATABASE_ADMIN_USER;
 
+-- Grant ownership of master database schemas to DATABASE_ADMIN_ROLE
+-- This ensures that cloned schemas will also be owned by DATABASE_ADMIN_ROLE
+-- allowing it to transfer ownership to other roles during dev resets
+GRANT OWNERSHIP ON SCHEMA ONLINE_STORE_DB.PUBLIC TO ROLE DATABASE_ADMIN_ROLE COPY CURRENT GRANTS;
+GRANT OWNERSHIP ON SCHEMA ONLINE_STORE_DB.DBT TO ROLE DATABASE_ADMIN_ROLE COPY CURRENT GRANTS;
+
 -- Grant ownership of ONLINE_STORE_DEV database to enable drop operations
 -- Note: This will be executed after the database is first created
 -- For existing databases, run: GRANT OWNERSHIP ON DATABASE ONLINE_STORE_DEV TO ROLE DATABASE_ADMIN_ROLE;
@@ -66,9 +72,11 @@ SHOW GRANTS TO ROLE DATABASE_ADMIN_ROLE;
 -- IMPORTANT SETUP INSTRUCTIONS:
 -- =====================================================
 -- 1. Run this script as ACCOUNTADMIN role
--- 2. If ONLINE_STORE_DEV already exists, transfer ownership by running:
+-- 2. This script grants DATABASE_ADMIN_ROLE ownership of master database schemas
+--    This is essential for proper cloning - cloned schemas inherit ownership
+-- 3. If ONLINE_STORE_DEV already exists, transfer ownership by running:
 --    GRANT OWNERSHIP ON DATABASE ONLINE_STORE_DEV TO ROLE DATABASE_ADMIN_ROLE REVOKE CURRENT GRANTS;
 --    Note: This will revoke all existing grants. Re-run the reset script to restore permissions.
--- 3. Update your .env file with: DATABASE_ADMIN_PASSWORD=DbAdmin2024#Reset!
--- 4. Add DATABASE_ADMIN_PASSWORD to GitHub repository secrets
+-- 4. Update your .env file with: DATABASE_ADMIN_PASSWORD=DbAdmin2024#Reset!
+-- 5. Add DATABASE_ADMIN_PASSWORD to GitHub repository secrets
 -- =====================================================

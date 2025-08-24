@@ -15,12 +15,6 @@ jobs:
         uses: snowflakedb/snowflake-cli-action@v1.5
       
       - name: Reset Development Database
-        env:
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_USER: LIQUIBASE_USER
-          SNOWFLAKE_PASSWORD: ${{ secrets.LIQUIBASE_DEV_PASSWORD }}
-          SNOWFLAKE_ROLE: LIQUIBASE_ROLE
-          SNOWFLAKE_WAREHOUSE: COMPUTE_WH
         run: |
           echo "🔄 Resetting development database..."
           echo "📊 Connecting to Snowflake account: ${{ secrets.SNOWFLAKE_ACCOUNT }}"
@@ -69,8 +63,13 @@ jobs:
           echo "🗑️ Dropping existing ONLINE_STORE_DEV..."
           echo "📋 Cloning fresh copy from ONLINE_STORE_DB (master)..."
           
-          # Execute the reset SQL
-          snow sql -f reset_dev.sql
+          # Execute the reset SQL using temporary connection
+          snow sql -f reset_dev.sql --temporary-connection \
+            --account "${{ secrets.SNOWFLAKE_ACCOUNT }}" \
+            --user LIQUIBASE_USER \
+            --password "${{ secrets.LIQUIBASE_DEV_PASSWORD }}" \
+            --role LIQUIBASE_ROLE \
+            --warehouse COMPUTE_WH
           
           echo ""
           echo "✅ Development database reset complete!"

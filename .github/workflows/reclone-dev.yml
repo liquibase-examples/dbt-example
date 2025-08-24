@@ -1,0 +1,79 @@
+name: Reclone Dev Database
+
+on:
+  workflow_dispatch:
+
+jobs:
+  reclone-dev:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Snowflake CLI
+        uses: snowflakedb/snowflake-cli-action@v1.5
+      
+      - name: Reset Development Database
+        env:
+          SNOWFLAKE_CONNECTIONS_DEFAULT_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_CONNECTIONS_DEFAULT_USER: LIQUIBASE_USER
+          SNOWFLAKE_CONNECTIONS_DEFAULT_PASSWORD: ${{ secrets.LIQUIBASE_DEV_PASSWORD }}
+          SNOWFLAKE_CONNECTIONS_DEFAULT_ROLE: LIQUIBASE_ROLE
+          SNOWFLAKE_CONNECTIONS_DEFAULT_WAREHOUSE: COMPUTE_WH
+        run: |
+          echo "🔄 Resetting development database..."
+          echo "📊 Connecting to Snowflake account: ${{ secrets.SNOWFLAKE_ACCOUNT }}"
+          
+          # Create SQL for database reset
+          cat << 'EOF' > reset_dev.sql
+          -- Drop the existing dev database (if it exists)
+          DROP DATABASE IF EXISTS ONLINE_STORE_DEV;
+          
+          -- Create fresh dev database from ONLINE_STORE_DB (the master)
+          CREATE DATABASE ONLINE_STORE_DEV 
+              CLONE ONLINE_STORE_DB
+              COMMENT = 'Development database - freshly cloned from master via GitHub Actions';
+          
+          -- Grant permissions to both roles on the new dev database
+          GRANT USAGE ON DATABASE ONLINE_STORE_DEV TO ROLE LIQUIBASE_ROLE;
+          GRANT USAGE ON DATABASE ONLINE_STORE_DEV TO ROLE DBT_ROLE;
+          
+          -- Grant schema permissions
+          GRANT ALL ON SCHEMA ONLINE_STORE_DEV.PUBLIC TO ROLE LIQUIBASE_ROLE;
+          GRANT USAGE ON SCHEMA ONLINE_STORE_DEV.PUBLIC TO ROLE DBT_ROLE;
+          GRANT SELECT ON ALL TABLES IN SCHEMA ONLINE_STORE_DEV.PUBLIC TO ROLE DBT_ROLE;
+          GRANT SELECT ON ALL VIEWS IN SCHEMA ONLINE_STORE_DEV.PUBLIC TO ROLE DBT_ROLE;
+          
+          GRANT ALL ON SCHEMA ONLINE_STORE_DEV.DBT TO ROLE DBT_ROLE;
+          GRANT USAGE ON SCHEMA ONLINE_STORE_DEV.DBT TO ROLE LIQUIBASE_ROLE;
+          GRANT SELECT ON ALL TABLES IN SCHEMA ONLINE_STORE_DEV.DBT TO ROLE LIQUIBASE_ROLE;
+          GRANT SELECT ON ALL VIEWS IN SCHEMA ONLINE_STORE_DEV.DBT TO ROLE LIQUIBASE_ROLE;
+          
+          -- Grant future object permissions
+          GRANT ALL ON FUTURE TABLES IN SCHEMA ONLINE_STORE_DEV.PUBLIC TO ROLE LIQUIBASE_ROLE;
+          GRANT ALL ON FUTURE VIEWS IN SCHEMA ONLINE_STORE_DEV.PUBLIC TO ROLE LIQUIBASE_ROLE;
+          GRANT SELECT ON FUTURE TABLES IN SCHEMA ONLINE_STORE_DEV.PUBLIC TO ROLE DBT_ROLE;
+          GRANT SELECT ON FUTURE VIEWS IN SCHEMA ONLINE_STORE_DEV.PUBLIC TO ROLE DBT_ROLE;
+          
+          GRANT ALL ON FUTURE TABLES IN SCHEMA ONLINE_STORE_DEV.DBT TO ROLE DBT_ROLE;
+          GRANT ALL ON FUTURE VIEWS IN SCHEMA ONLINE_STORE_DEV.DBT TO ROLE DBT_ROLE;
+          GRANT SELECT ON FUTURE TABLES IN SCHEMA ONLINE_STORE_DEV.DBT TO ROLE LIQUIBASE_ROLE;
+          GRANT SELECT ON FUTURE VIEWS IN SCHEMA ONLINE_STORE_DEV.DBT TO ROLE LIQUIBASE_ROLE;
+          
+          -- Show result
+          SELECT 'Database reset completed successfully' AS status;
+          SHOW DATABASES LIKE '%ONLINE_STORE%';
+          EOF
+          
+          echo "🗑️ Dropping existing ONLINE_STORE_DEV..."
+          echo "📋 Cloning fresh copy from ONLINE_STORE_DB (master)..."
+          
+          # Execute the reset SQL
+          snow sql -f reset_dev.sql
+          
+          echo ""
+          echo "✅ Development database reset complete!"
+          echo "📊 ONLINE_STORE_DEV is now a fresh clone of ONLINE_STORE_DB"
+          echo ""
+          echo "💡 The dev deployment workflow will automatically rebuild dbt models on the next push to main"
